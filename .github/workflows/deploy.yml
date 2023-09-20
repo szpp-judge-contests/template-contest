@@ -1,0 +1,20 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main # とりあえず main だけで走らせる(TODO: staging の対応)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+      - name: build
+        working-directory: test
+        run: go build -o ./.. ./deploy
+      - name: deploy
+        run: ./deploy

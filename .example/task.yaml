@@ -1,0 +1,28 @@
+title: a + b
+writer: szppi
+checker: wcmp
+verifier: verifier.cpp
+correct: correct.cpp
+time_limit: 2000 # ms
+memory_limit: 1024 # MB
+difficulty: beginner
+testcase_sets:
+  sample:
+    score: 0
+    list:
+      - testcase_01
+  all:
+    score: 100
+    list:
+      - testcase_01
+      - testcase_02
+      - testcase_03
+      - testcase_04
+      - testcase_05
+testcases:
+  - name: testcase_01
+    description: $5 + 3 = 8$ です。
+  - name: testcase_02
+  - name: testcase_03
+  - name: testcase_04
+  - name: testcase_05
