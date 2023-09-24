@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -15,14 +17,16 @@ import (
 	judgev1 "github.com/szpp-dev-team/szpp-judge/proto-gen/go/judge/v1"
 	pkgtask "github.com/szpp-judge-contests/template-contest/task"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
-	conn, err := grpc.Dial(os.Getenv("BACKEND_GRPC_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	systemRoots, err := x509.SystemCertPool()
 	if err != nil {
 		panic(err)
 	}
+	conn, err := grpc.Dial(os.Getenv("BACKEND_GRPC_ADDR"), grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		RootCAs: systemRoots,
+	})))
 	defer conn.Close()
 	cli := backendv1.NewTaskServiceClient(conn)
 
