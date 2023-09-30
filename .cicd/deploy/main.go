@@ -17,6 +17,7 @@ import (
 	judgev1 "github.com/szpp-dev-team/szpp-judge/proto-gen/go/judge/v1"
 	pkgtask "github.com/szpp-judge-contests/template-contest/task"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func main() {
@@ -51,7 +52,8 @@ func main() {
 		for name, testcaseSet := range task.Config.TestcaseSets {
 			testcaseSets = append(testcaseSets, &backendv1.MutationTestcaseSet{
 				Slug:          name,
-				Score:         int32(testcaseSet.Score),
+				ScoreRatio:    int32(testcaseSet.ScoreRatio),
+				IsSample:      testcaseSet.IsSample,
 				TestcaseSlugs: testcaseSet.List,
 			})
 		}
@@ -85,9 +87,7 @@ func main() {
 		taskIDkey := fmt.Sprintf("%s_TASK_ID", strings.ToUpper(entry.Name()))
 		if taskID, err := strconv.Atoi(os.Getenv(taskIDkey)); err != nil {
 			resp, err := cli.CreateTask(context.Background(), &backendv1.CreateTaskRequest{
-				Task:         mutationTask,
-				TestcaseSets: testcaseSets,
-				Testcases:    testcases,
+				Task: mutationTask,
 			})
 			if err != nil {
 				panic(err)
@@ -96,10 +96,8 @@ func main() {
 			os.Setenv("GITHUB_ENV", fmt.Sprintf("%s\n%s=%d", os.Getenv("GITHUB_ENV"), taskIDkey, resp.Task.Id))
 		} else {
 			resp, err := cli.UpdateTask(context.Background(), &backendv1.UpdateTaskRequest{
-				Id:           int32(taskID),
-				Task:         mutationTask,
-				TestcaseSets: testcaseSets,
-				Testcases:    testcases,
+				TaskId: int32(taskID),
+				Task:   mutationTask,
 			})
 			if err != nil {
 				panic(err)
