@@ -65,8 +65,9 @@ type TaskConfig struct {
 }
 
 type TestcaseSet struct {
-	Score int      `yaml:"score"`
-	List  []string `yaml:"list"`
+	ScoreRatio int      `yaml:"score_ratio"`
+	List       []string `yaml:"list"`
+	IsSample   bool     `yaml:"is_sample"`
 }
 
 type Testcase struct {

@@ -8,17 +8,19 @@ memory_limit: 1024 # MB
 difficulty: beginner
 testcase_sets:
   sample:
-    score: 0
+    score_ratio: 0 # 足して100になるようにする。
     list:
       - testcase_01
+    is_sample: true
   all:
-    score: 100
+    score_ratio: 100
     list:
       - testcase_01
       - testcase_02
       - testcase_03
       - testcase_04
       - testcase_05
+    is_sample: false
 testcases:
   - name: testcase_01
     description: $5 + 3 = 8$ です。
