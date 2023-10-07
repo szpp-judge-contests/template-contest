@@ -17,6 +17,7 @@ import (
 	judgev1 "github.com/szpp-dev-team/szpp-judge/proto-gen/go/judge/v1"
 	pkgtask "github.com/szpp-judge-contests/template-contest/task"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func main() {
@@ -27,6 +28,9 @@ func main() {
 	conn, err := grpc.Dial(os.Getenv("BACKEND_GRPC_ADDR"), grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
 		RootCAs: systemRoots,
 	})))
+	if err != nil {
+		panic(err)
+	}
 	defer conn.Close()
 	cli := backendv1.NewTaskServiceClient(conn)
 
@@ -36,7 +40,7 @@ func main() {
 	}
 
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		if !entry.IsDir() || entry.Name() == ".example" {
 			continue
 		}
 		if _, err := os.Stat(filepath.Join(entry.Name(), "task.yaml")); errors.Is(err, os.ErrNotExist) {
