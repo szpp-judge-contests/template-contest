@@ -1,6 +1,9 @@
 title: a + b
 writer: szppi
-checker: wcmp
+checker:
+  type: normal
+  options:
+    case_insensitive: false
 verifier: verifier.cpp
 correct: correct.cpp
 time_limit: 2000 # ms
