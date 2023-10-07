@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/samber/lo"
 	pkgtask "github.com/szpp-judge-contests/template-contest/task"
 )
 
 func main() {
-	entries, err := os.ReadDir(".")
+	rootDir := os.Getenv("TASKS_ROOT")
+	entries, err := os.ReadDir(rootDir)
 	if err != nil {
 		panic(err)
 	}
@@ -31,49 +31,9 @@ func main() {
 			os.Exit(1)
 		}
 
-		if err := Check(task); err != nil {
+		if err := task.Check(); err != nil {
 			slog.Error("found error", "task", task.Dir, "error", err)
 			os.Exit(1)
 		}
 	}
-}
-
-func Check(task *pkgtask.Task) error {
-	inList, outList, err := task.ListTestcases()
-	if err != nil {
-		slog.Error("failed to load testcases", "error", err)
-		os.Exit(1)
-	}
-	if !isEqualSliceSet(inList, outList) {
-		slog.Error("the set of in/ is not equal to the set of out/")
-		os.Exit(1)
-	}
-
-	if err := task.CompileVerifier(); err != nil {
-		return err
-	}
-	if err := task.CompileCorrect(); err != nil {
-		return err
-	}
-	for _, testcase := range task.Config.Testcases {
-		if err := task.VerifyTestcase(testcase.Name); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func isEqualSliceSet[T comparable](a, b []T) bool {
-	transform := func(e T) (T, struct{}) { return e, struct{}{} }
-	aSet, bSet := lo.Associate(a, transform), lo.Associate(b, transform)
-	if len(aSet) != len(bSet) {
-		return false
-	}
-	for k := range aSet {
-		if _, ok := bSet[k]; !ok {
-			return false
-		}
-	}
-	return true
 }
