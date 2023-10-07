@@ -13,7 +13,9 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
+	"github.com/samber/lo"
 	backendv1 "github.com/szpp-dev-team/szpp-judge/proto-gen/go/backend/v1"
+	"github.com/szpp-judge-contests/template-contest/contest"
 	pkgtask "github.com/szpp-judge-contests/template-contest/task"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -54,6 +56,7 @@ func main() {
 		panic(err)
 	}
 
+	tasks := make([]*backendv1.Task, 0)
 	for _, entry := range entries {
 		if !entry.IsDir() || entry.Name() == ".example" {
 			continue
@@ -121,6 +124,7 @@ func main() {
 				panic(err)
 			}
 			taskID = int(resp.Task.Id)
+			tasks = append(tasks, resp.Task)
 			slog.Info("created", "id", resp.Task.Id)
 			os.Setenv("GITHUB_ENV", fmt.Sprintf("%s\n%s=%d", os.Getenv("GITHUB_ENV"), taskIDkey, resp.Task.Id))
 		} else {
@@ -131,6 +135,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
+			tasks = append(tasks, resp.Task)
 			slog.Info("updated", "id", resp.Task.Id)
 		}
 
@@ -146,6 +151,23 @@ func main() {
 		slog.Info("synced", "task_id", taskID)
 	}
 
+	c, err := contest.Load(filepath.Join(rootDir, "contest.yaml"))
+	if err != nil {
+		panic(err)
+	}
+
 	// コンテストと紐付けする
-	contestCli.SyncContestTasks(ctx, &backendv1.SyncContestTasksRequest{})
+	resp, err := contestCli.SyncContestTasks(ctx, &backendv1.SyncContestTasksRequest{
+		ContestSlug: os.Getenv("CONTEST_SLUG"),
+		Tasks: lo.Map(tasks, func(task *backendv1.Task, i int) *backendv1.SyncContestTasksRequest_Task {
+			return &backendv1.SyncContestTasksRequest_Task{
+				Id:    task.Id,
+				Score: int32(c.Scores[i]),
+			}
+		}),
+	})
+	if err != nil {
+		panic(err)
+	}
+	slog.Info("contest tasks were synced", slog.Any("resp", resp))
 }
