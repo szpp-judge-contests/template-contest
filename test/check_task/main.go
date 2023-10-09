@@ -11,6 +11,7 @@ import (
 
 func main() {
 	rootDir := os.Getenv("TASKS_ROOT")
+	panic(rootDir)
 	entries, err := os.ReadDir(rootDir)
 	if err != nil {
 		panic(err)
