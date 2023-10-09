@@ -5,7 +5,7 @@ go 1.21.0
 require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/samber/lo v1.38.1
-	github.com/szpp-dev-team/szpp-judge/proto-gen/go v0.0.0-20231007050128-affa6af9b073
+	github.com/szpp-dev-team/szpp-judge/proto-gen/go v0.0.0-20231009084354-d4b96a5c985a
 	google.golang.org/grpc v1.58.2
 	gopkg.in/yaml.v3 v3.0.1
 )
