@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 
 	"github.com/samber/lo"
-	judgev1 "github.com/szpp-dev-team/szpp-judge/proto-gen/go/judge/v1"
 	yamlv3 "gopkg.in/yaml.v3"
 )
 
@@ -55,7 +54,7 @@ func Load(path string) (*Task, error) {
 type TaskConfig struct {
 	Title        string                  `yaml:"title"`
 	Writer       string                  `yaml:"writer"`
-	Checker      *Checker                `yaml:"checker"`
+	Checker      string                  `yaml:"checker"`
 	Verifier     string                  `yaml:"verifier"`
 	Correct      string                  `yaml:"correct"`
 	TimeLimit    int                     `yaml:"time_limit"`
@@ -63,11 +62,6 @@ type TaskConfig struct {
 	Difficulty   string                  `yaml:"difficulty"`
 	TestcaseSets map[string]*TestcaseSet `yaml:"testcase_sets"`
 	Testcases    []*Testcase             `yaml:"testcases"`
-}
-
-type Checker struct {
-	Type    string         `yaml:"type"`
-	Options map[string]any `yaml:"options"`
 }
 
 type TestcaseSet struct {
@@ -176,49 +170,6 @@ func (t *Task) ListTestcases() ([]string, []string, error) {
 		return nil, nil, err
 	}
 	return lo.Map(inEntries, getFilename), lo.Map(outEntries, getFilename), nil
-}
-
-func (t *Task) JudgeType() (*judgev1.JudgeType, error) {
-	var judgeType *judgev1.JudgeType
-	switch t.Config.Checker.Type {
-	case "normal":
-		caseInsensitive := t.Config.Checker.Options["case_insensitive"].(bool)
-		judgeType = &judgev1.JudgeType{
-			JudgeType: &judgev1.JudgeType_Normal{
-				Normal: &judgev1.JudgeTypeNormal{
-					CaseInsensitive: &caseInsensitive,
-				},
-			},
-		}
-	case "eps":
-		ndigits := uint32(t.Config.Checker.Options["ndigits"].(int))
-		judgeType = &judgev1.JudgeType{
-			JudgeType: &judgev1.JudgeType_Eps{
-				Eps: &judgev1.JudgeTypeEPS{
-					Ndigits: ndigits,
-				},
-			},
-		}
-	case "custom":
-		judgeType = &judgev1.JudgeType{
-			JudgeType: &judgev1.JudgeType_Custom{
-				Custom: &judgev1.JudgeTypeCustom{
-					JudgeCodePath: t.Config.Checker.Options["judge_code_path"].(string),
-				},
-			},
-		}
-	case "interactive":
-		judgeType = &judgev1.JudgeType{
-			JudgeType: &judgev1.JudgeType_Interactive{
-				Interactive: &judgev1.JudgeTypeInteractive{
-					JudgeCodePath: t.Config.Checker.Options["judge_code_path"].(string),
-				},
-			},
-		}
-	default:
-		return nil, errors.New("unknown checker type")
-	}
-	return judgeType, nil
 }
 
 func basename(name string) string {
