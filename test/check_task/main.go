@@ -13,7 +13,9 @@ func main() {
 	rootDir := os.Getenv("TASKS_ROOT")
 	entries, err := os.ReadDir(rootDir)
 	if err != nil {
-		panic(err)
+		cur, _ := os.Getwd()
+		panic(cur)
+		// panic(err)
 	}
 	for _, entry := range entries {
 		if !entry.IsDir() {
