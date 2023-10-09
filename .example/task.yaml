@@ -1,9 +1,6 @@
 title: a + b
 writer: szppi
-checker:
-  type: normal
-  options:
-    case_insensitive: false
+checker: checker.cpp
 verifier: verifier.cpp
 correct: correct.cpp
 time_limit: 2000 # ms
