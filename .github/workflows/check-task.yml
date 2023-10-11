@@ -7,9 +7,9 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    env:
-      TASKS_ROOT: "../"
     steps:
+      - run: mkdir test
+      - run: ls -la
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
