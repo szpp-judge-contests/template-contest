@@ -15,10 +15,8 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-      - run: ls -la
-        working-directory: test
       - name: build
         working-directory: test
-        run: go build -o ./.. ./.cicd/check_task
+        run: go build -o ./.. ./.cicd/
       - name: check tasks
         run: ./check_task
