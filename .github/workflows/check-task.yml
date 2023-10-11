@@ -19,7 +19,8 @@ jobs:
         working-directory: test
       - name: build
         working-directory: test
-        run: go env -w GO111MODULE=auto
-        run: go build -o ./.. ./.cicd/check_task
+        run:
+          go env -w GO111MODULE=auto
+          go build -o ./.. ./.cicd/check_task
       - name: check tasks
         run: ./check_task
