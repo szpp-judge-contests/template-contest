@@ -18,7 +18,6 @@ jobs:
       - name: build
         working-directory: test
         run: pwd
-        run: ls -la
         run: go build -o ./.. ./.cicd/check_task
       - name: check tasks
         run: ./check_task
