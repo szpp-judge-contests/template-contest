@@ -18,8 +18,8 @@ jobs:
       - name: build
         working-directory: test
         run: |
-          go install ./.cicd/task
+          go install ./.cicd/
           go env -w GO111MODULE=auto
-          go build -o ./.. ./.cicd/check_task
+          go build -o ./.. ./.cicd/*
       - name: check tasks
         run: ./check_task
