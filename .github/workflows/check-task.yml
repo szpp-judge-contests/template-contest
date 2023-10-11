@@ -20,6 +20,6 @@ jobs:
       - name: build
         working-directory: test
         run:
-          go build -o ./.. ./.cicd/check_task
+          go build -o ./check_task ./.cicd/check_task
       - name: check tasks
         run: ./check_task
