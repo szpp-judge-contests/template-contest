@@ -101,7 +101,7 @@ func main() {
 			})
 		}
 
-		judgeType, err := task.JudgeType()
+		checker, err := os.ReadFile(filepath.Join(taskPath, task.Config.Checker))
 		if err != nil {
 			panic(err)
 		}
@@ -111,8 +111,9 @@ func main() {
 			Statement:       string(task.Statement),
 			ExecTimeLimit:   int32(task.Config.TimeLimit),
 			ExecMemoryLimit: int32(task.Config.MemoryLimit),
-			JudgeType:       judgeType,
+			JudgeType:       nil,
 			Difficulty:      backendv1.Difficulty(backendv1.Difficulty_value[strcase.ToScreamingSnake(task.Config.Difficulty)]),
+			Checker:         string(checker),
 		}
 		taskIDkey := fmt.Sprintf("%s_TASK_ID", strings.ToUpper(entry.Name()))
 		taskID, err := strconv.Atoi(os.Getenv(taskIDkey))

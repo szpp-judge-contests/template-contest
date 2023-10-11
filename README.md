@@ -9,7 +9,7 @@
 ```yaml
 title: a + b  # 問題名
 writer: szppi  # 作問者の szpp-judge id
-checker: normal  # checker の種類(TODO: doc)
+checker: checker.cpp  # checker のファイル名(基本 checker.cpp)
 verifier: verifier.cpp  # テストケース入力検証機のファイル名(基本 verifier.cpp)
 correct: correct.cpp  # writer 解のファイル名(基本 correct.cpp)
 time_limit: 2000  # 実行時間制限[ms]
@@ -72,7 +72,11 @@ $A$ $B$
 
 writer 解を記述してください。
 
-### 5. testcases
+### 5. `checker.cpp`
+
+提出プログラムの出力と正しい出力をチェックするコードを書いてください。
+
+### 6. testcases
 
 以下のようなディレクトリ構造で入力と出力のテストケースをおいてください。
 
