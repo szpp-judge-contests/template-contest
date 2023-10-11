@@ -21,4 +21,6 @@ jobs:
           go build -o ../. ./check_task
       - name: check tasks
         working-directory: test/
-        run: ./check_task
+        run: |
+          ls -la
+          ./check_task
