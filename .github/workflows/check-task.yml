@@ -9,9 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: mkdir test
-      - run: pwd
-      - run: ls -la
       - uses: actions/checkout@v3
+        with:
+          path: ./test
+      - run: ls -la ./test
       - uses: actions/setup-go@v4
         with:
           go-version: '1.21'
