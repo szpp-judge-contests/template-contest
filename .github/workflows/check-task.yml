@@ -7,6 +7,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      TASKS_ROOT: ./.cicd/task
     steps:
       - run: mkdir test
       - uses: actions/checkout@v3
@@ -21,6 +23,4 @@ jobs:
           go build -o ../. ./check_task
       - name: check tasks
         working-directory: test/
-        run: |
-          ls -la
-          ./check_task
+        run: ./check_task
