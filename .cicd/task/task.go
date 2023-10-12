@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -24,6 +23,8 @@ type Task struct {
 
 	executableVerifier string
 	executableCorrect  string
+	executableChecker  string
+	executableWrong    *string
 }
 
 func Load(path string) (*Task, error) {
@@ -40,6 +41,10 @@ func Load(path string) (*Task, error) {
 	if err != nil {
 		return nil, err
 	}
+	var executableWrong *string
+	if c.Wrong != nil {
+		executableWrong = lo.ToPtr(basename(*c.Wrong))
+	}
 	return &Task{
 		Dir:                path,
 		TestcaseInPath:     filepath.Join(path, "testcases", "in"),
@@ -48,6 +53,8 @@ func Load(path string) (*Task, error) {
 		Statement:          b,
 		executableVerifier: basename(c.Verifier),
 		executableCorrect:  basename(c.Correct),
+		executableChecker:  basename(c.Checker),
+		executableWrong:    executableWrong,
 	}, nil
 }
 
@@ -57,6 +64,7 @@ type TaskConfig struct {
 	Checker      string                  `yaml:"checker"`
 	Verifier     string                  `yaml:"verifier"`
 	Correct      string                  `yaml:"correct"`
+	Wrong        *string                 `yaml:"wrong"`
 	TimeLimit    int                     `yaml:"time_limit"`
 	MemoryLimit  int                     `yaml:"memory_limit"`
 	Difficulty   string                  `yaml:"difficulty"`
@@ -92,6 +100,14 @@ func (t *Task) Check() error {
 	if err := t.CompileCorrect(); err != nil {
 		return err
 	}
+	if err := t.CompileChecker(); err != nil {
+		return err
+	}
+	if t.Config.Wrong != nil {
+		if err := t.CompileWrong(); err != nil {
+			return err
+		}
+	}
 	for _, testcase := range t.Config.Testcases {
 		if err := t.VerifyTestcase(testcase.Name); err != nil {
 			return err
@@ -106,7 +122,7 @@ func (t *Task) Check() error {
 
 func (t *Task) CompileVerifier() error {
 	slog.Info("compiling verifier", "task", t.Dir)
-	if err := executeCommand("g++", []string{"-O2", "-std=gnu++17", "-o", t.executableVerifier, "-I", "..", t.Config.Verifier}, withWorkdir(t.Dir)); err != nil {
+	if _, err := executeCommand("g++", []string{"-O2", "-std=gnu++17", "-o", t.executableVerifier, "-I", "..", t.Config.Verifier}, withWorkdir(t.Dir)); err != nil {
 		slog.Error("failed to compile", "name", t.Config.Verifier, "error", err)
 		return err
 	}
@@ -115,8 +131,26 @@ func (t *Task) CompileVerifier() error {
 
 func (t *Task) CompileCorrect() error {
 	slog.Info("compiling correct", "task", t.Dir)
-	if err := executeCommand("g++", []string{"-O2", "-std=gnu++17", "-o", t.executableCorrect, "-I", "..", t.Config.Correct}, withWorkdir(t.Dir)); err != nil {
+	if _, err := executeCommand("g++", []string{"-O2", "-std=gnu++17", "-o", t.executableCorrect, t.Config.Correct}, withWorkdir(t.Dir)); err != nil {
 		slog.Error("failed to compile", "name", t.Config.Correct, "error", err)
+		return err
+	}
+	return nil
+}
+
+func (t *Task) CompileChecker() error {
+	slog.Info("compiling checker", "task", t.Dir)
+	if _, err := executeCommand("g++", []string{"-O2", "-std=gnu++17", "-o", t.executableChecker, "-I", "..", t.Config.Checker}, withWorkdir(t.Dir)); err != nil {
+		slog.Error("failed to compile", "name", t.Config.Checker, "error", err)
+		return err
+	}
+	return nil
+}
+
+func (t *Task) CompileWrong() error {
+	slog.Info("compiling wrong", "task", t.Dir)
+	if _, err := executeCommand("g++", []string{"-O2", "-std=gnu++17", "-o", *t.executableWrong, "-I", "..", *t.Config.Wrong}, withWorkdir(t.Dir)); err != nil {
+		slog.Error("failed to compile", "name", t.Config.Wrong, "error", err)
 		return err
 	}
 	return nil
@@ -135,28 +169,69 @@ func (t *Task) VerifyTestcaseSets() error {
 
 func (t *Task) VerifyTestcase(testcase string) error {
 	slog.Info("verifying testcase", "task", t.Dir, "testcase", testcase)
-	in, err := os.Open(filepath.Join(t.TestcaseInPath, testcase+".txt"))
+
+	inPath := filepath.Join(t.TestcaseInPath, testcase+".txt")
+	outPath := filepath.Join(t.TestcaseOutPath, testcase+".txt")
+
+	b, err := os.ReadFile(inPath)
 	if err != nil {
-		return err
-	}
-	defer in.Close()
-	if err := executeCommand(fmt.Sprintf("./%s", t.executableVerifier), []string{}, withWorkdir(t.Dir), withStdin(in)); err != nil {
-		slog.Error("failed to verify testcase", "task", t.Dir, "testcase", testcase, "error", err)
-		return err
-	}
-	f, err := os.OpenFile("user_stdout.txt", os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if err := executeCommand(fmt.Sprintf("./%s", t.executableCorrect), []string{}, withWorkdir(t.Dir), withStdin(in), withStdout(f)); err != nil {
-		slog.Error("failed to execute correct", "task", t.Dir, "testcase", testcase, "error", err)
 		return err
 	}
 
-	// TODO: check output
+	ok, err := executeCommand(fmt.Sprintf("./%s", t.executableVerifier), []string{}, withWorkdir(t.Dir), withStdin(bytes.NewReader(b)))
+	if err != nil {
+		return err
+	}
+	if !ok {
+		slog.Error("failed to verify testcase", "task", t.Dir, "testcase", testcase)
+		return errors.New("verification failed")
+	}
+
+	ok, err = t.executeAndCheckCode(t.executableCorrect, inPath, outPath)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		slog.Error("failed to check testcase(correct pattern)", "task", t.Dir, "testcase", testcase)
+		return errors.New("verification failed")
+	}
+
+	if t.executableWrong != nil {
+		ok, err := t.executeAndCheckCode(*t.executableWrong, inPath, outPath)
+		if err != nil {
+			return err
+		}
+		if ok {
+			slog.Error("failed to check testcase(wrong pattern)", "task", t.Dir, "testcase", testcase)
+			return errors.New("verification failed")
+		}
+	}
 
 	return nil
+}
+
+func (t *Task) executeAndCheckCode(executable, inPath, outPath string) (bool, error) {
+	b, err := os.ReadFile(inPath)
+	if err != nil {
+		return false, err
+	}
+	f, err := os.OpenFile(filepath.Join(t.Dir, "user_stdout.txt"), os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
+	if err != nil {
+		return false, err
+	}
+	ok, err := executeCommand(fmt.Sprintf("./%s", executable), []string{}, withWorkdir(t.Dir), withStdin(bytes.NewReader(b)), withStdout(f))
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+	defer f.Close()
+	return executeCommand(fmt.Sprintf("./%s", t.executableChecker), []string{
+		inPath,
+		outPath,
+		"user_stdout.txt",
+	}, withWorkdir(t.Dir))
 }
 
 func (t *Task) ListTestcases() ([]string, []string, error) {
@@ -194,7 +269,7 @@ func withStdout(w io.Writer) func(*exec.Cmd) {
 	}
 }
 
-func executeCommand(command string, args []string, opts ...func(*exec.Cmd)) error {
+func executeCommand(command string, args []string, opts ...func(*exec.Cmd)) (bool, error) {
 	cmd := exec.Command(command, args...)
 	for _, opt := range opts {
 		opt(cmd)
@@ -202,13 +277,12 @@ func executeCommand(command string, args []string, opts ...func(*exec.Cmd)) erro
 	buf := &bytes.Buffer{}
 	cmd.Stderr = buf
 	if err := cmd.Run(); err != nil {
-		log.Println(err)
 		if _, ok := err.(*exec.ExitError); ok {
-			return errors.New(buf.String())
+			return false, nil
 		}
-		return err
+		return false, err
 	}
-	return nil
+	return true, nil
 }
 
 func isEqualSliceSet[T comparable](a, b []T) bool {

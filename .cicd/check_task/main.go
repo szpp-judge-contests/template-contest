@@ -16,18 +16,19 @@ func main() {
 		panic(err)
 	}
 	for _, entry := range entries {
-		if !entry.IsDir() {
+		if !entry.IsDir() || entry.Name() == ".example" {
 			continue
 		}
-		if _, err := os.Stat(filepath.Join(entry.Name(), "task.yaml")); errors.Is(err, os.ErrNotExist) {
+		taskDirPath := filepath.Join(rootDir, entry.Name())
+		if _, err := os.Stat(filepath.Join(taskDirPath, "task.yaml")); errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 
 		slog.Info("start checking task", "task", entry.Name())
 
-		task, err := pkgtask.Load(entry.Name())
+		task, err := pkgtask.Load(taskDirPath)
 		if err != nil {
-			slog.Error("failed to load task", "task", task.Dir, "error", err)
+			slog.Error("failed to load task", "task", entry.Name(), "error", err)
 			os.Exit(1)
 		}
 

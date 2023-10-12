@@ -8,8 +8,6 @@ github.com/iancoleman/strcase v0.3.0 h1:nTXanmYxhfFAMjZL34Ov6gkzEsSJZ5DbhxWjvSAS
 github.com/iancoleman/strcase v0.3.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/samber/lo v1.38.1 h1:j2XEAqXKb09Am4ebOg31SpvzUTTs6EN3VfgeLUhPdXM=
 github.com/samber/lo v1.38.1/go.mod h1:+m/ZKRl6ClXCE2Lgf3MsQlWfh4bn1bz6CXEOxnEXnEA=
-github.com/szpp-dev-team/szpp-judge/proto-gen/go v0.0.0-20231007050128-affa6af9b073 h1:72yx1UkSu4RF2uvzVePT+Ho5SCQKLAUMoDNPhFRpRwk=
-github.com/szpp-dev-team/szpp-judge/proto-gen/go v0.0.0-20231007050128-affa6af9b073/go.mod h1:9vOEPpQ298vr4gn7lSRHDu5BIqD+zrnYDrDGR4EQLtA=
 github.com/szpp-dev-team/szpp-judge/proto-gen/go v0.0.0-20231009084354-d4b96a5c985a h1:9UbxYoePq7wC5iHvAEGu3DKBuhwOyHKWSYFGPyBYnkg=
 github.com/szpp-dev-team/szpp-judge/proto-gen/go v0.0.0-20231009084354-d4b96a5c985a/go.mod h1:9vOEPpQ298vr4gn7lSRHDu5BIqD+zrnYDrDGR4EQLtA=
 golang.org/x/exp v0.0.0-20231006140011-7918f672742d h1:jtJma62tbqLibJ5sFQz8bKtEM8rJBtfilJ2qTU199MI=
