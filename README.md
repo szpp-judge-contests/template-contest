@@ -2,6 +2,24 @@
 
 - URL: {{ .ContestURL }}
 
+## コマンド
+
+### 問題の形式をチェック
+
+```shell
+$ make check
+```
+
+### 問題のアップロード
+
+**!IMPORTANT!**
+
+Create が行われるだけで Update は行われないので注意してください(修正予定)
+
+```shell
+$ make upload-tasks
+```
+
 ## 問題の作り方
 
 ### 1. `task.yaml`
